@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ElinosaAI — Solana Memecoin Intelligence</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f9f9f8;
+    --surface: #ffffff;
+    --surface2: #f4f4f2;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #9b9b97;
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-dark: #0F6E56;
+    --red: #E24B4A;
+    --red-light: #FCEBEB;
+    --amber: #EF9F27;
+    --amber-light: #FAEEDA;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Layout ── */
+  .app {
+    display: grid;
+    grid-template-rows: 52px 1fr;
+    grid-template-columns: 1fr 340px;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .logo-circle {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--green);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-circle svg { width: 12px; height: 12px; fill: white; }
+  .logo-name { font-size: 14px; font-weight: 600; }
+  .logo-sub { font-size: 12px; color: var(--text2); }
+  .nosana-pill {
+    margin-left: auto;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border2);
+    color: var(--text2);
+    background: var(--surface2);
+  }
+
+  /* ── Main area ── */
+  .main {
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    padding: 16px;
+  }
+
+  /* ── Search ── */
+  .search-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+  .search-row { display: flex; gap: 8px; }
+  .search-row input {
+    flex: 1;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-row input:focus { border-color: var(--green); }
+  .search-row button {
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--green);
+    color: white;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .search-row button:hover { background: var(--green-dark); }
+  .search-row button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text3);
+    font-size: 13px;
+  }
+  .empty-icon { font-size: 28px; margin-bottom: 10px; }
+
+  /* ── Token header ── */
+  .token-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .token-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--green-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: var(--green-dark);
+    flex-shrink: 0;
+  }
+  .token-title { font-size: 15px; font-weight: 600; }
+  .token-addr { font-size: 11px; color: var(--text2); font-family: monospace; }
+  .risk-pill {
+    margin-left: auto;
+    font-size: 11px; font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .pill-danger { background: var(--red-light); color: #A32D2D; }
+  .pill-high   { background: var(--amber-light); color: #854F0B; }
+  .pill-caution{ background: var(--amber-light); color: #854F0B; }
+  .pill-safe   { background: var(--green-light); color: var(--green-dark); }
+  .pill-rugged { background: #501313; color: #F7C1C1; }
+
+  /* ── Metrics grid ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .metric {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+  .metric-value { font-size: 14px; font-weight: 600; }
+  .up   { color: var(--green); }
+  .down { color: var(--red); }
+
+  /* ── DexScreener link ── */
+  .dex-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 10px;
+    font-size: 12px; color: var(--green);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid #5DCAA5;
+    transition: background 0.15s;
+  }
+  .dex-link:hover { background: var(--green-light); }
+
+  /* ── Safety section ── */
+  .section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.6px;
+    text-transform: uppercase; color: var(--text3);
+    margin-bottom: 10px;
+  }
+  .safety-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .safety-metric {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .safety-metric-label { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+  .safety-metric-value { font-size: 14px; font-weight: 600; }
+  .score-track {
+    height: 5px; border-radius: 3px;
+    background: var(--border);
+    margin-top: 5px; overflow: hidden;
+  }
+  .score-fill { height: 100%; border-radius: 3px; transition: width 0.6s; }
+
+  /* ── Flags ── */
+  .flags { display: flex; flex-direction: column; gap: 6px; }
+  .flag {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    font-size: 13px;
+  }
+  .flag-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    margin-top: 4px; flex-shrink: 0;
+  }
+  .dot-danger { background: var(--red); }
+  .dot-warning { background: var(--amber); }
+  .flag-name { font-weight: 600; margin-right: 4px; }
+  .flag-desc { color: var(--text2); }
+  .no-flags { font-size: 13px; color: var(--text2); padding: 4px 0; }
+
+  /* ── Goal advisor ── */
+  .goal-prompt { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
+  .goal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .goal-btn {
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2);
+    background: var(--surface2);
+    cursor: pointer; text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .goal-btn:hover { border-color: var(--green); background: var(--green-light); }
+  .goal-btn.active { border-color: var(--green); background: var(--green-light); }
+  .goal-key { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .goal-sub { font-size: 11px; color: var(--text2); }
+  .goal-result {
+    display: none;
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    font-size: 13px; line-height: 1.6;
+    white-space: pre-wrap;
+    border-left: 3px solid var(--green);
+  }
+
+  /* ── Loading dots ── */
+  .dots { display: inline-flex; gap: 3px; }
+  .dots span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text3);
+    animation: blink 1.2s infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0.15} 40%{opacity:1} }
+
+  /* ── Sidebar / Chat ── */
+  .sidebar {
+    border-left: 0.5px solid var(--border);
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .chat-header {
+    padding: 0 16px;
+    height: 52px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 13px; font-weight: 600; flex-shrink: 0;
+  }
+  .chat-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .chat-msgs {
+    flex: 1; overflow-y: auto;
+    padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .msg { display: flex; flex-direction: column; gap: 3px; max-width: 88%; }
+  .msg.bot  { align-self: flex-start; }
+  .msg.user { align-self: flex-end; }
+  .bubble {
+    padding: 9px 12px;
+    font-size: 13px; line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .msg.bot  .bubble {
+    background: var(--surface2);
+    border-radius: 4px 12px 12px 12px;
+    color: var(--text);
+  }
+  .msg.user .bubble {
+    background: var(--green);
+    border-radius: 12px 4px 12px 12px;
+    color: white;
+  }
+  .msg-time { font-size: 10px; color: var(--text3); padding: 0 2px; }
+
+  .chat-input-row {
+    padding: 12px;
+    border-top: 0.5px solid var(--border);
+    display: flex; gap: 8px; flex-shrink: 0;
+  }
+  .chat-input-row input {
+    flex: 1; padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text); font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .chat-input-row input:focus { border-color: var(--green); }
+  .send-btn {
+    width: 32px; height: 32px; flex-shrink: 0;
+    border-radius: 50%; border: none;
+    background: var(--green); color: white;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .send-btn:hover { background: var(--green-dark); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="logo-circle">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/></svg>
+    </div>
+    <span class="logo-name">ElinosaAI</span>
+    <span class="logo-sub">Solana memecoin intelligence</span>
+    <span class="nosana-pill">Powered by Nosana GPU</span>
+  </div>
+
+  <!-- Main panel -->
+  <div class="main">
+
+    <!-- Search -->
+    <div class="card">
+      <div class="search-label">Paste a Solana token address to analyze</div>
+      <div class="search-row">
+        <input id="addr" placeholder="e.g. 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgHkv" />
+        <button id="analyze-btn" onclick="runAnalysis()">Analyze</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results">
+      <div class="empty">
+        <div class="empty-icon">&#128270;</div>
+        Paste a token address above for live price, liquidity &amp; rug risk data
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sidebar chat -->
+  <div class="sidebar">
+    <div class="chat-header">
+      <div class="chat-dot"></div>
+      Chat with ElinosaAI
+    </div>
+    <div class="chat-msgs" id="chat-msgs">
+      <div class="msg bot">
+        <div class="bubble">Hey! Paste a token address on the left to analyze it, then ask me anything about it here.</div>
+        <div class="msg-time">ElinosaAI</div>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <input id="chat-in" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendChat()" />
+      <button class="send-btn" onclick="sendChat()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="white"><path d="M2 8l12-6-4 6 4 6-12-6z"/></svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let GROQ_KEY = '';
+let tokenCtx = null;
+
+// Fetch key from local server on load
+async function loadConfig() {
+  try {
+    const r = await fetch('/api/config');
+    if (r.ok) {
+      const d = await r.json();
+      GROQ_KEY = d.groqKey || '';
+    }
+  } catch {
+    // Running standalone without server — key stays empty
+  }
+}
+loadConfig();
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function fmtUsd(n) {
+  n = parseFloat(n || 0);
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+  return '$' + n.toFixed(2);
+}
+function fmtChange(n) {
+  n = parseFloat(n || 0);
+  return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+}
+function getVerdict(score, rugged) {
+  if (rugged)     return { label: 'RUGGED',    cls: 'pill-rugged'  };
+  if (score >= 800) return { label: 'SAFE',    cls: 'pill-safe'    };
+  if (score >= 500) return { label: 'CAUTION', cls: 'pill-caution' };
+  if (score >= 200) return { label: 'HIGH RISK',cls: 'pill-high'   };
+  return               { label: 'DANGER',      cls: 'pill-danger'  };
+}
+function nowTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ── Token analysis ────────────────────────────────────────────────────────────
+async function runAnalysis() {
+  const addr = document.getElementById('addr').value.trim();
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr)) {
+    alert('Please enter a valid Solana token address (32–44 characters).');
+    return;
+  }
+  const btn = document.getElementById('analyze-btn');
+  btn.textContent = 'Analyzing...'; btn.disabled = true;
+  document.getElementById('results').innerHTML =
+    '<div class="empty"><div class="dots"><span></span><span></span><span></span></div><div style="margin-top:10px;color:var(--text2)">Fetching live data from DexScreener &amp; RugCheck...</div></div>';
+
+  const [dex, rug] = await Promise.all([
+    fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`).then(r => r.json()).catch(() => null),
+    fetch(`https://api.rugcheck.xyz/v1/tokens/${addr}/report`).then(r => r.json()).catch(() => null),
+  ]);
+
+  btn.textContent = 'Analyze'; btn.disabled = false;
+
+  const pairs = (dex?.pairs || []).filter(p => p.chainId === 'solana');
+  const pair  = pairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0] || null;
+
+  const sym   = pair?.baseToken?.symbol || addr.slice(0, 6) + '...';
+  const name  = pair?.baseToken?.name   || 'Unknown token';
+  const price = parseFloat(pair?.priceUsd || 0);
+  const liq   = parseFloat(pair?.liquidity?.usd || 0);
+  const vol   = parseFloat(pair?.volume?.h24 || 0);
+  const mc    = parseFloat(pair?.marketCap || pair?.fdv || 0);
+  const c24   = parseFloat(pair?.priceChange?.h24 || 0);
+  const c6    = parseFloat(pair?.priceChange?.h6  || 0);
+  const c1    = parseFloat(pair?.priceChange?.h1  || 0);
+  const buys  = pair?.txns?.h24?.buys  || 0;
+  const sells = pair?.txns?.h24?.sells || 0;
+  const ageMs = pair?.pairCreatedAt ? Date.now() - pair.pairCreatedAt : null;
+  const ageH  = ageMs ? Math.floor(ageMs / 3600000) : null;
+  const ageStr = ageH != null ? (ageH >= 24 ? Math.floor(ageH/24)+'d '+(ageH%24)+'h' : ageH+'h') : 'N/A';
+
+  const score    = rug?.score ?? rug?.score_normalised ?? 0;
+  const verdict  = getVerdict(score, rug?.rugged);
+  const top10    = (rug?.topHolders || []).slice(0, 10);
+  const top10pct = top10.length > 0 ? top10.reduce((s, h) => s + (h.pct || 0), 0).toFixed(1) + '%' : 'N/A';
+  const lpLocked = (rug?.markets?.[0]?.lp?.lpLockedPct || 0).toFixed(1);
+  const lpBurned = (rug?.markets?.[0]?.lp?.lpBurnedPct || 0).toFixed(1);
+  const holders  = rug?.totalHolders ?? 'N/A';
+  const flags    = (rug?.risks || []).filter(r => r.level === 'danger' || r.level === 'warning').slice(0, 5);
+
+  const scoreColor = score >= 500 ? '#1D9E75' : score >= 200 ? '#EF9F27' : '#E24B4A';
+
+  tokenCtx = { sym, name, price, liq, vol, mc, c24, score, top10pct, lpLocked, lpBurned, holders, flags, addr };
+
+  const flagsHtml = flags.length > 0
+    ? flags.map(f => `
+        <div class="flag">
+          <div class="flag-dot ${f.level === 'danger' ? 'dot-danger' : 'dot-warning'}"></div>
+          <div><span class="flag-name">${f.name}:</span><span class="flag-desc">${f.description}</span></div>
+        </div>`).join('')
+    : '<div class="no-flags">No major red flags detected</div>';
+
+  document.getElementById('results').innerHTML = `
+    <div class="card">
+      <div class="token-top">
+        <div class="token-avatar">${sym.slice(0,2).toUpperCase()}</div>
+        <div>
+          <div class="token-title">${sym} — ${name}</div>
+          <div class="token-addr">${addr.slice(0,12)}...${addr.slice(-8)}</div>
+        </div>
+        <span class="risk-pill ${verdict.cls}">${verdict.label}</span>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Price</div><div class="metric-value">${price < 0.0001 ? price.toExponential(3) : '$' + price.toFixed(6)}</div></div>
+        <div class="metric"><div class="metric-label">24h change</div><div class="metric-value ${c24>=0?'up':'down'}">${fmtChange(c24)}</div></div>
+        <div class="metric"><div class="metric-label">Liquidity</div><div class="metric-value">${fmtUsd(liq)}</div></div>
+        <div class="metric"><div class="metric-label">24h volume</div><div class="metric-value">${fmtUsd(vol)}</div></div>
+        <div class="metric"><div class="metric-label">Market cap</div><div class="metric-value">${fmtUsd(mc)}</div></div>
+        <div class="metric"><div class="metric-label">Buys / sells</div><div class="metric-value">${buys} / ${sells}</div></div>
+        <div class="metric"><div class="metric-label">6h / 1h</div><div class="metric-value ${c6>=0?'up':'down'}">${fmtChange(c6)} / ${fmtChange(c1)}</div></div>
+        <div class="metric"><div class="metric-label">Pair age</div><div class="metric-value">${ageStr}</div></div>
+      </div>
+      ${pair ? `<a class="dex-link" href="https://dexscreener.com/solana/${addr}" target="_blank">View on DexScreener ↗</a>` : ''}
+    </div>
+
+    <div class="card">
+      <div class="section-label">Safety analysis</div>
+      <div class="safety-grid">
+        <div class="safety-metric">
+          <div class="safety-metric-label">Risk score</div>
+          <div class="safety-metric-value">${score}/1000</div>
+          <div class="score-track"><div class="score-fill" style="width:${Math.min(score/10,100)}%;background:${scoreColor}"></div></div>
+        </div>
+        <div class="safety-metric"><div class="safety-metric-label">Top 10 holders</div><div class="safety-metric-value">${top10pct}</div></div>
+        <div class="safety-metric"><div class="safety-metric-label">LP locked</div><div class="safety-metric-value">${lpLocked}%</div></div>
+        <div class="safety-metric"><div class="safety-metric-label">Total holders</div><div class="safety-metric-value">${holders}</div></div>
+      </div>
+      <div class="flags">${flagsHtml}</div>
+    </div>
+
+    <div class="card">
+      <div class="goal-prompt">What's your goal with this token?</div>
+      <div class="goal-grid">
+        <button class="goal-btn" onclick="selectGoal('A',this)"><div class="goal-key">A — Thinking of buying</div><div class="goal-sub">Entry analysis</div></button>
+        <button class="goal-btn" onclick="selectGoal('B',this)"><div class="goal-key">B — Already holding</div><div class="goal-sub">Exit signals</div></button>
+        <button class="goal-btn" onclick="selectGoal('C',this)"><div class="goal-key">C — Smells like a rug</div><div class="goal-sub">Safety breakdown</div></button>
+        <button class="goal-btn" onclick="selectGoal('D',this)"><div class="goal-key">D — Just curious</div><div class="goal-sub">Project overview</div></button>
+      </div>
+      <div class="goal-result" id="goal-result"></div>
+    </div>`;
+
+  addBotMsg(`Analyzed ${sym} — risk score ${score}/1000 (${verdict.label}). Ask me anything about it.`);
+}
+
+async function selectGoal(goal, btn) {
+  document.querySelectorAll('.goal-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const el = document.getElementById('goal-result');
+  el.style.display = 'block';
+  el.textContent = 'Thinking...';
+  const goalMap = { A:'Thinking of Buying', B:'Already Holding', C:'Rug Safety Check', D:'Just Curious' };
+  const reply = await callLLM(
+    `User selected goal: ${goalMap[goal]}. Token: ${tokenCtx.sym}, risk score: ${tokenCtx.score}/1000, liquidity: ${fmtUsd(tokenCtx.liq)}, top 10 holders: ${tokenCtx.top10pct}, LP locked: ${tokenCtx.lpLocked}%, LP burned: ${tokenCtx.lpBurned}%. Give 4–5 focused bullet points of advice for their goal. End with DYOR.`
+  );
+  el.textContent = reply;
+}
+
+// ── LLM call ─────────────────────────────────────────────────────────────────
+async function callLLM(userMsg) {
+  if (!GROQ_KEY) return 'No Groq API key found. Add GROQ_API_KEY to your .env and restart.';
+  try {
+    const sys = tokenCtx
+      ? `You are ElinosaAI, a Solana memecoin intelligence agent on Nosana GPU. Token context: ${tokenCtx.sym} (${tokenCtx.name}), price $${tokenCtx.price}, liquidity ${fmtUsd(tokenCtx.liq)}, risk score ${tokenCtx.score}/1000, top 10 holders ${tokenCtx.top10pct}, LP locked ${tokenCtx.lpLocked}%. Be concise and data-driven. End with DYOR.`
+      : `You are ElinosaAI, a Solana memecoin intelligence agent on Nosana GPU. Help users understand Solana tokens, rug pulls, liquidity, and DeFi safety. Be concise. End with DYOR.`;
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        max_tokens: 400,
+        messages: [{ role: 'system', content: sys }, { role: 'user', content: userMsg }]
+      })
+    });
+    const d = await res.json();
+    return d.choices?.[0]?.message?.content?.trim() || 'Could not get a response.';
+  } catch (e) {
+    return 'Error: ' + e.message;
+  }
+}
+
+// ── Chat ─────────────────────────────────────────────────────────────────────
+function addBotMsg(text) {
+  const c = document.getElementById('chat-msgs');
+  c.innerHTML += `<div class="msg bot"><div class="bubble">${text}</div><div class="msg-time">${nowTime()}</div></div>`;
+  c.scrollTop = c.scrollHeight;
+}
+function addUserMsg(text) {
+  const c = document.getElementById('chat-msgs');
+  c.innerHTML += `<div class="msg user"><div class="bubble">${text}</div><div class="msg-time">${nowTime()}</div></div>`;
+  c.scrollTop = c.scrollHeight;
+}
+function addLoader() {
+  const id = 'ld' + Date.now();
+  const c = document.getElementById('chat-msgs');
+  c.innerHTML += `<div class="msg bot" id="${id}"><div class="bubble"><div class="dots"><span></span><span></span><span></span></div></div></div>`;
+  c.scrollTop = c.scrollHeight;
+  return id;
+}
+
+async function sendChat() {
+  const inp = document.getElementById('chat-in');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  addUserMsg(text);
+  const lid = addLoader();
+  const reply = await callLLM(text);
+  document.getElementById(lid)?.remove();
+  addBotMsg(reply);
+}
+
+document.getElementById('addr').addEventListener('keydown', e => { if (e.key === 'Enter') runAnalysis(); });
+</script>
+</body>
+</html>

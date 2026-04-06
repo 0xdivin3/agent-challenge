@@ -1,0 +1,12 @@
+{
+  "name": "elinosa-custom-plugin",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "../dist/index.js",
+  "exports": {
+    ".": "../dist/index.js"
+  },
+  "dependencies": {
+    "@elizaos/core": "^1.0.0"
+  }
+}

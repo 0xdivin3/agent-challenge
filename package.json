@@ -3,18 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.24.0",
   "scripts": {
-    "start": "elizaos start --character ./characters/agent.character.json",
-    "dev": "elizaos dev --character ./characters/agent.character.json"
+    "start": "node start-agent.mjs",
+    "dev": "elizaos dev --character ./characters/solbrief.character.json",
+    "build": "tsc",
+    "telegram": "node telegram/bot.cjs"
   },
   "dependencies": {
     "@elizaos/core": "^1.0.0",
-    "@elizaos/plugin-anthropic": "^1.5.12",
     "@elizaos/plugin-bootstrap": "^1.0.0",
-    "@elizaos/plugin-openai": "^1.0.0"
+    "@elizaos/plugin-groq": "^1.0.4",
+    "@elizaos/plugin-openai": "^1.0.0",
+    "@elizaos/plugin-telegram": "^1.0.0",
+    "dotenv": "^16.0.0",
+    "elinosa-custom-plugin": "workspace:*"
   },
   "devDependencies": {
     "@elizaos/cli": "^1.0.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   }
 }
