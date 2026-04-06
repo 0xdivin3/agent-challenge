@@ -1,202 +1,384 @@
-\# ElinosaAI — Solana Memecoin Intelligence Agent
+# ElinosaAI — Solana Memecoin Intelligence Agent
 
+> *Paste any Solana token address. Tell me your goal. I'll tell you what the data says.*
 
+**ElinosaAI** is a conversational AI agent built on ElizaOS v2 and deployed on Nosana decentralized GPU infrastructure. It connects to live Solana on-chain APIs and delivers real data-backed analysis on any Solana memecoin — no hype, no opinions, just numbers.
 
-> Paste any Solana token address. Tell me your goal. I'll tell you what the data says.
+Built for the **[Nosana x ElizaOS Builders Challenge](https://earn.superteam.fun/listings/bounty/nosana-builders-challenge-elizaos/)**.
 
+---
 
+## Live Demo
 
-Built for the \*\*Nosana x ElizaOS Builders Challenge\*\* — running on decentralized GPU infrastructure.
+- 🌐 **Web UI:** [YOUR_NOSANA_DEPLOYMENT_URL]
+- 🤖 **Telegram Bot:** [@ElinosaAI_bot](https://t.me/ElinosaAI_bot)
+- 🐳 **Docker Image:** [0xdivine3/elinosaai](https://hub.docker.com/r/0xdivine3/elinosaai)
 
+---
 
+## What It Does
 
-\## Live Demo
+ElinosaAI is a Solana memecoin intelligence agent with three core capabilities and two interfaces (Web + Telegram).
 
+### Token Analysis (`ANALYZE_TOKEN`)
 
+Paste any Solana contract address and ElinosaAI fetches live data from two APIs simultaneously:
 
-\- Web UI: YOUR\_NOSANA\_DEPLOYMENT\_URL
+**From DexScreener:**
+- Live price in USD
+- 24h / 6h / 1h price change
+- Liquidity depth in USD
+- 24h trading volume
+- Buy/sell transaction count and ratio
+- Market cap and FDV
+- Pair age (how long since the token launched)
+- Direct DexScreener link
 
-\- Telegram: @ElinosaAI\_bot
+**From RugCheck.xyz:**
+- Normalised risk score out of 1000
+- Top 10 holder concentration (% of supply)
+- LP locked percentage and LP burned percentage
+- Total holder count
+- Insider wallet flags
+- Specific red flags (mint authority active, low LP, high concentration, etc.)
 
+After delivering the full report, ElinosaAI prompts the user with a goal selection:
 
+```
+What's your goal with this token?
+A) 🟢 Thinking of buying — want entry analysis
+B) 🟡 Already holding — want exit signals
+C) 🔴 Smells like a rug — want a safety breakdown
+D) 🔵 Just curious about the project
+```
 
-\## What It Does
+### Goal-Based Analysis (`GOAL_ANALYSIS`)
 
+When the user replies A, B, C, or D, ElinosaAI delivers tailored analysis:
 
+- **A (Buying):** Green lights to look for, red flags to avoid, entry sizing strategy
+- **B (Holding):** Exit signal indicators, distribution phase patterns, profit-taking strategy
+- **C (Rug Check):** Breakdown of the 5 most important rug pull indicators and what to do
+- **D (Curious):** How to read market cap, liquidity, volume, and pair age — plus how to research further
 
-ElinosaAI is a conversational Solana intelligence agent. It connects to live on-chain APIs and gives you real data-backed analysis on any Solana memecoin — no hype, no opinions, just numbers.
+### Wallet Activity (`CHECK_WALLET`)
 
+Send any Solana wallet address with a keyword like "check wallet" and ElinosaAI fetches the last 10 transactions via Helius, summarising transaction types and activity patterns.
 
+---
 
-\- \*\*Token Analysis\*\* — Paste any Solana contract address. Get live price, 24h volume, liquidity, buy/sell ratio, pair age, and rug pull risk score instantly.
+## Example Interaction
 
-\- \*\*Rug Pull Detection\*\* — Checks LP lock percentage, LP burn, top holder concentration, and mint authority via RugCheck.xyz.
+```
+User:  7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgHkv
 
-\- \*\*Goal-Based Advice\*\* — After fetching token data, ElinosaAI asks your goal: buying, holding, rug checking, or just curious. Tailors analysis to your situation.
+Agent: 🔍 Analyzing 7xKXtg2C... — fetching live data from DexScreener and RugCheck...
 
-\- \*\*Wallet Activity\*\* — Look up recent transaction history for any Solana wallet address via Helius.
+       **$GOAT — Goat Token**
 
-\- \*\*Telegram Bot\*\* — Full analysis available directly in Telegram. Paste an address, get instant results.
+       📊 Price: $4.2000e-4
+       📈 24h: +18.40% | 6h: +6.10% | 1h: +2.30%
+       💧 Liquidity: $284.1K
+       📉 24h Volume: $1.2M
+       🔄 Buy/Sell Ratio: 1.30 (312 buys / 241 sells)
+       💎 Market Cap: $420.0K
+       🕐 Pair Age: 3d 4h
+       🔗 DexScreener: https://dexscreener.com/solana/...
 
+       🛡️ Risk Score: 342/1000 — 🔴 HIGH RISK
+       👥 Top 10 Holders: 67.3% of supply
+       🔒 LP Locked: 0% | LP Burned: 12.0%
+       👤 Total Holders: 4,821
 
+       🚩 Red Flags:
+       🔴 Mint authority: still active — devs can print unlimited tokens
+       🟡 High concentration: top 10 holders above 60%
 
-\## Tech Stack
+       ---
+       What's your goal with this token?
+       A) 🟢 Thinking of buying
+       B) 🟡 Already holding
+       C) 🔴 Rug safety check
+       D) 🔵 Just curious
 
+User:  A
 
+Agent: 🟢 Goal: Thinking of Buying
 
-| Layer | Technology |
+       Before you enter, here's what the data says to check:
 
-|-------|-----------|
+       ✅ Green lights to look for:
+       • Risk score above 700/1000
+       • LP locked or burned (not zero)
+       • Top 10 holders below 40% of supply
+       ...
+```
 
-| Agent Framework | ElizaOS v2 |
+---
 
-| LLM | Qwen/Qwen3.5-4B via Nosana endpoint |
+## Tech Stack
 
-| Compute | Nosana decentralized GPU network |
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Agent Framework | [ElizaOS v2](https://elizaos.com) | Core agent runtime, action system, character config |
+| LLM | Qwen/Qwen3.5-4B | Conversational responses via Nosana endpoint |
+| Compute | [Nosana](https://nosana.com) decentralized GPU | Inference on community-owned hardware |
+| Token Data | [DexScreener API](https://dexscreener.com) | Live price, volume, liquidity (free, no key needed) |
+| Rug Analysis | [RugCheck.xyz API](https://rugcheck.xyz) | Risk score, LP lock, holder analysis (free, no key needed) |
+| Wallet Data | [Helius](https://helius.xyz) | Transaction history (free tier — 100K req/mo) |
+| Telegram | Telegram Bot API | Long-polling bot interface |
+| Runtime | [Bun](https://bun.sh) | Fast JavaScript/TypeScript runtime |
+| Container | Docker | Containerised deployment |
 
-| Token Data | DexScreener API (free, no key) |
+---
 
-| Rug Analysis | RugCheck.xyz API (free, no key) |
+## Project Structure
 
-| Wallet Data | Helius (free tier) |
+```
+agent-challenge/
+├── src/
+│   └── index.ts                          # Custom ElizaOS plugin — 3 actions
+│       ├── ANALYZE_TOKEN                 # DexScreener + RugCheck parallel fetch
+│       ├── CHECK_WALLET                  # Helius wallet activity lookup
+│       └── GOAL_ANALYSIS                 # Goal-based token advice (A/B/C/D)
+│
+├── characters/
+│   └── solbrief.character.json           # ElinosaAI personality, system prompt, knowledge
+│
+├── telegram/
+│   ├── bot.ts                            # Telegram bot (TypeScript source)
+│   └── bot.cjs                           # Compiled bot (CommonJS, ready to run)
+│
+├── public/
+│   └── index.html                        # Web UI landing page
+│
+├── nos_job_def/
+│   └── nosana_eliza_job_definition.json  # Nosana deployment config
+│
+├── Dockerfile                            # Production container (Bun-based)
+├── .env.example                          # Environment variable template
+├── package.json                          # Dependencies and scripts
+└── README.md
+```
 
-| Telegram | Long-polling bot via Telegram Bot API |
+---
 
-| Runtime | Bun |
+## Quick Start
 
+### Prerequisites
 
+- [Bun](https://bun.sh) v1.0+ — `curl -fsSL https://bun.sh/install | bash`
+- Git
+- A free [Helius](https://helius.xyz) API key (for wallet lookups)
+- Optional: Telegram bot token from [@BotFather](https://t.me/BotFather)
 
-\## Quick Start
+### 1. Fork and clone
 
-
-
-\### 1. Clone and install
+First, fork this repo on GitHub, then:
 
 ```bash
-
-git clone https://github.com/YOUR\_USERNAME/agent-challenge
-
+git clone https://github.com/YOUR_USERNAME/agent-challenge
 cd agent-challenge
-
-bun install --ignore-scripts
-
 ```
 
-
-
-\### 2. Configure environment
+### 2. Install dependencies
 
 ```bash
-
-cp .env.example .env
-
+bun install --ignore-scripts
 ```
 
+### 3. Configure environment
 
+```bash
+cp .env.example .env
+```
 
-Edit `.env` and add your keys:
+Edit `.env` — the Nosana LLM endpoint is pre-configured. You only need to add your own keys:
 
 ```env
+# Pre-configured — Nosana Qwen endpoint (no changes needed)
+OPENAI_API_KEY=nosana
+OPENAI_API_URL=https://4ksj3tve5bazqwkuyqdhwdpcar4yutcuxphwhckrdxmu.node.k8s.prd.nos.ci/v1
+MODEL_NAME=Qwen/Qwen3.5-4B
 
-HELIUS\_API\_KEY=your\_key\_here        # free at helius.xyz
-
-TELEGRAM\_BOT\_TOKEN=your\_token\_here  # optional, from @BotFather
-
+# Add your own keys below
+HELIUS_API_KEY=your_key_here        # Free at helius.xyz — needed for wallet lookups
+TELEGRAM_BOT_TOKEN=your_token_here  # Optional — from @BotFather on Telegram
 ```
 
-
-
-\### 3. Run the agent
+### 4. Run the agent
 
 ```bash
-
 bun run dev
-
 ```
 
+Open **http://localhost:3000** in your browser and paste any Solana token address.
 
+### 5. Run the Telegram bot (optional)
 
-Open http://localhost:3000 and paste any Solana token address.
-
-
-
-\### 4. Run Telegram bot (optional)
+In a separate terminal:
 
 ```bash
-
 bun run telegram
-
 ```
 
+Then open your bot in Telegram and send `/start`.
 
+---
 
-\## Deployment on Nosana
+## How to Use
 
+### Web Interface
 
+1. Open `http://localhost:3000`
+2. Paste any Solana token contract address into the chat
+3. ElinosaAI fetches live data and returns a full report
+4. Reply **A**, **B**, **C**, or **D** to get goal-tailored analysis
 
-\### 1. Build and push Docker image
+### Telegram
+
+1. Start the agent with `bun run dev`
+2. In a second terminal, run `bun run telegram`
+3. Open your bot in Telegram
+4. Send `/start` for instructions
+5. Paste any Solana contract address
+6. Reply A, B, C, or D after the report
+
+### Commands (Telegram)
+
+| Command | Description |
+|---------|-------------|
+| `/start` | Introduction and usage instructions |
+| `/help` | List all available commands |
+| `<token address>` | Full token analysis with rug check |
+| `check wallet <address>` | Wallet transaction activity |
+| `A` / `B` / `C` / `D` | Goal-based follow-up analysis |
+
+---
+
+## Deployment on Nosana
+
+### Prerequisites
+
+- [Docker](https://docker.com) installed
+- [Docker Hub](https://hub.docker.com) account
+- [Nosana CLI](https://docs.nosana.com/cli) installed: `npm install -g @nosana/cli`
+- Nosana builder credits: [nosana.com/builders-credits](https://nosana.com/builders-credits)
+
+### 1. Build and push Docker image
 
 ```bash
-
-docker build -t YOUR\_DOCKERHUB\_USERNAME/elinosaai:latest .
-
-docker push YOUR\_DOCKERHUB\_USERNAME/elinosaai:latest
-
+docker build -t YOUR_DOCKERHUB_USERNAME/elinosaai:latest .
+docker push YOUR_DOCKERHUB_USERNAME/elinosaai:latest
 ```
 
+### 2. Update Nosana job definition
 
+Edit `nos_job_def/nosana_eliza_job_definition.json` and update:
+- `image` → your Docker Hub image name
+- `HELIUS_API_KEY` → your Helius API key
+- `TELEGRAM_BOT_TOKEN` → your Telegram bot token
 
-\### 2. Update job definition
+```json
+{
+  "version": "0.1",
+  "type": "container",
+  "ops": [
+    {
+      "type": "container/run",
+      "id": "agent",
+      "args": {
+        "image": "YOUR_DOCKERHUB_USERNAME/elinosaai:latest",
+        "expose": 3000,
+        "env": {
+          "OPENAI_API_KEY": "nosana",
+          "OPENAI_API_URL": "https://4ksj3tve5bazqwkuyqdhwdpcar4yutcuxphwhckrdxmu.node.k8s.prd.nos.ci/v1",
+          "MODEL_NAME": "Qwen/Qwen3.5-4B",
+          "HELIUS_API_KEY": "your_key",
+          "TELEGRAM_BOT_TOKEN": "your_token",
+          "SERVER_PORT": "3000",
+          "NODE_ENV": "production"
+        }
+      }
+    }
+  ]
+}
+```
 
-
-
-Edit `nos\_job\_def/nosana\_eliza\_job\_definition.json` and replace `YOUR\_DOCKERHUB\_USERNAME`.
-
-
-
-\### 3. Deploy
+### 3. Deploy
 
 ```bash
-
-npm install -g @nosana/cli
-
-nosana job submit --file nos\_job\_def/nosana\_eliza\_job\_definition.json --market nvidia-3090
-
+nosana job post \
+  --file nos_job_def/nosana_eliza_job_definition.json \
+  --market nvidia-3090 \
+  --api YOUR_NOSANA_API_KEY \
+  --timeout 30 \
+  --wait
 ```
 
+Your live URL will be printed after deployment completes.
 
+---
 
-\## APIs Used
+## Custom ElizaOS Plugin
 
+The core intelligence lives in `src/index.ts` — a custom ElizaOS plugin with three actions:
 
+### `ANALYZE_TOKEN`
+- **Trigger:** Any message containing a Solana base58 address (32-44 chars)
+- **Validation:** Regex check for valid Solana address format
+- **Process:** Parallel fetch from DexScreener + RugCheck APIs
+- **Output:** Structured report with price data, safety metrics, and red flags
+- **Error handling:** Graceful fallback if either API is unavailable
 
-| API | Purpose | Cost |
+### `CHECK_WALLET`
+- **Trigger:** Messages containing "wallet", "address", "activity", or "transactions" + a valid address
+- **Process:** Helius API fetch for last 10 transactions
+- **Output:** Transaction type summary (e.g. "4x SWAP, 3x TRANSFER, 2x NFT_SALE")
 
-|-----|---------|------|
+### `GOAL_ANALYSIS`
+- **Trigger:** Single letter A, B, C, D — or written equivalents (buy, hold, rug, curious)
+- **Output:** Detailed, goal-specific guidance based on what the data showed
 
-| DexScreener | Price, volume, liquidity, pair age | Free |
+---
 
-| RugCheck.xyz | Risk score, LP lock, holder analysis | Free |
+## APIs Used
 
-| Helius | Wallet transaction history | Free tier |
+| API | Endpoint | Purpose | Auth Required |
+|-----|----------|---------|--------------|
+| DexScreener | `api.dexscreener.com/latest/dex/tokens/{address}` | Price, volume, liquidity, pair age | None |
+| RugCheck.xyz | `api.rugcheck.xyz/v1/tokens/{address}/report/summary` | Risk score, holder analysis, LP data | None |
+| Helius | `api.helius.xyz/v0/addresses/{wallet}/transactions` | Wallet transaction history | Free API key |
+| Nosana inference | Qwen/Qwen3.5-4B endpoint | LLM responses | Challenge credits |
 
-| Nosana inference | Qwen LLM | Free via challenge credits |
+---
 
+## Judging Criteria Alignment
 
+| Criteria | Weight | Implementation |
+|----------|--------|---------------|
+| Technical Implementation | 25% | TypeScript plugin with 3 typed actions, proper ElizaOS interfaces, parallel API fetching, full error handling, address validation |
+| Nosana Integration | 25% | Bun-based Dockerfile, Nosana job definition, Qwen/Qwen3.5-4B via Nosana OpenAI-compatible endpoint |
+| Usefulness & UX | 25% | Web UI + Telegram bot, goal-based A/B/C/D flow, real on-chain data, practical memecoin use case |
+| Creativity & Originality | 15% | Conversational rug-check agent with interactive goal selection — not a generic chatbot |
+| Documentation | 10% | This README, `.env.example`, inline code comments, setup and deployment guides |
 
-\## Disclaimer
+---
 
+## Security Notes
 
+- **No API keys are hardcoded** — all secrets are loaded from environment variables
+- **`.env` is gitignored** — never committed to the repository
+- **DexScreener and RugCheck require no keys** — zero-friction token analysis
+- **Helius free tier** — 100,000 requests per month, no credit card required
 
-ElinosaAI provides data from public APIs for informational purposes only. Nothing here is financial advice. Always DYOR.
+---
 
+## Disclaimer
 
+ElinosaAI provides data from public APIs for informational purposes only. Nothing in this project constitutes financial advice. Memecoin trading is extremely high risk. Always Do Your Own Research (DYOR) before making any investment decisions.
 
-\---
+---
 
-
-
-\*Built by \[@YOUR\_GITHUB\_USERNAME](https://github.com/YOUR\_GITHUB\_USERNAME) — Nosana x ElizaOS Builders Challenge 2026\*  
-
-\*Running on \[Nosana](https://nosana.com) decentralized GPU infrastructure\*
-
+*Built by [@0xdivin3](https://github.com/0xdivin3) — Nosana x ElizaOS Builders Challenge 2026*
+*Running on [Nosana](https://nosana.com) decentralized GPU infrastructure*
