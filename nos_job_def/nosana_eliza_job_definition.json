@@ -1,10 +1,17 @@
 {
+  "version": "0.1",
+  "type": "container",
+  "meta": {
+    "trigger": "cli"
+  },
   "ops": [
     {
+      "type": "container/run",
       "id": "agent",
       "args": {
         "image": "0xdivine3/elinosaai:latest",
         "expose": 3000,
+        "gpu": false,
         "env": {
           "OPENAI_API_KEY": "nosana",
           "OPENAI_API_URL": "https://4ksj3tve5bazqwkuyqdhwdpcar4yutcuxphwhckrdxmu.node.k8s.prd.nos.ci/v1",
@@ -13,17 +20,12 @@
           "OPENAI_EMBEDDING_API_KEY": "nosana",
           "OPENAI_EMBEDDING_MODEL": "Qwen3-Embedding-0.6B",
           "OPENAI_EMBEDDING_DIMENSIONS": "1024",
-          "HELIUS_API_KEY": "e04f2add-1d60-40f6-b90b-4ea3e451856b",
-          "TELEGRAM_BOT_TOKEN": "8607815663:AAEPCjLJQ5eu6tRbFIIsr3mVaf4C4Zd8zI8",
+          "HELIUS_API_KEY": "YOUR_NEW_HELIUS_KEY",
+          "TELEGRAM_BOT_TOKEN": "YOUR_NEW_TELEGRAM_TOKEN",
           "SERVER_PORT": "3000",
           "NODE_ENV": "production"
         }
-      },
-      "execution": {
-        "group": "run"
-      },
-      "type": "container/run"
+      }
     }
-  ],
-  "version": "0.1"
+  ]
 }
