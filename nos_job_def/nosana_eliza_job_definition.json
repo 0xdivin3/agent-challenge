@@ -3,7 +3,7 @@
     {
       "id": "agent",
       "args": {
-        "image": "YOUR_DOCKERHUB_USERNAME/elinosaai:latest",
+        "image": "0xdivine3/elinosaai:latest",
         "expose": 3000,
         "env": {
           "OPENAI_API_KEY": "nosana",
@@ -13,7 +13,8 @@
           "OPENAI_EMBEDDING_API_KEY": "nosana",
           "OPENAI_EMBEDDING_MODEL": "Qwen3-Embedding-0.6B",
           "OPENAI_EMBEDDING_DIMENSIONS": "1024",
-          "HELIUS_API_KEY": "REPLACE_WITH_YOUR_HELIUS_KEY",
+          "HELIUS_API_KEY": "e04f2add-1d60-40f6-b90b-4ea3e451856b",
+          "TELEGRAM_BOT_TOKEN": "8607815663:AAEPCjLJQ5eu6tRbFIIsr3mVaf4C4Zd8zI8",
           "SERVER_PORT": "3000",
           "NODE_ENV": "production"
         }
