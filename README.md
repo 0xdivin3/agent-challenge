@@ -10,7 +10,7 @@ Built for the **[Nosana x ElizaOS Builders Challenge](https://earn.superteam.fun
 
 ## Live Demo
 
-- 🌐 **Web UI:** [YOUR_NOSANA_DEPLOYMENT_URL]
+- 🌐 **Web UI:** [https://39WLJBVFdmLSMVZWF431ued8uWYw7Ay5fEaZa9JD9aoy.node.k8s.prd.nos.ci]
 - 🤖 **Telegram Bot:** [@ElinosaAIBot](https://t.me/ElinosaAIBot)
 - 🐳 **Docker Image:** [0xdivine3/elinosaai](https://hub.docker.com/r/0xdivine3/elinosaai)
 
