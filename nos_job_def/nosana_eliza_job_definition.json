@@ -9,21 +9,21 @@
       "type": "container/run",
       "id": "agent",
       "args": {
-        "image": "0xdivine3/elinosaai:latest",
+        "image": "0xdivine3/elinosaai-agent:latest",
         "expose": 3000,
         "gpu": false,
         "env": {
           "OPENAI_API_KEY": "nosana",
-          "OPENAI_API_URL": "https://4ksj3tve5bazqwkuyqdhwdpcar4yutcuxphwhckrdxmu.node.k8s.prd.nos.ci/v1",
-          "MODEL_NAME": "Qwen/Qwen3.5-4B",
-          "OPENAI_EMBEDDING_URL": "https://4yiccatpyxx773jtewo5ccwhw1s2hezq5pehndb6fcfq.node.k8s.prd.nos.ci/v1",
-          "OPENAI_EMBEDDING_API_KEY": "nosana",
-          "OPENAI_EMBEDDING_MODEL": "Qwen3-Embedding-0.6B",
-          "OPENAI_EMBEDDING_DIMENSIONS": "1024",
-          "HELIUS_API_KEY": "YOUR_NEW_HELIUS_KEY",
-          "TELEGRAM_BOT_TOKEN": "YOUR_NEW_TELEGRAM_TOKEN",
-          "SERVER_PORT": "3000",
-          "NODE_ENV": "production"
+"OPENAI_API_URL": "https://your-nosana-endpoint/v1",
+"MODEL_NAME": "Qwen/Qwen3.5-27B-AWQ-4bit",
+"OPENAI_EMBEDDING_URL": "https://your-nosana-embedding-endpoint/v1",
+"OPENAI_EMBEDDING_API_KEY": "nosana",
+"OPENAI_EMBEDDING_MODEL": "Qwen3-Embedding-0.6B",
+"OPENAI_EMBEDDING_DIMENSIONS": "1024",
+"HELIUS_API_KEY": "your_helius_key_here",
+"TELEGRAM_BOT_TOKEN": "your_telegram_token_here",
+"SERVER_PORT": "3000",
+"NODE_ENV": "production"
         }
       }
     }

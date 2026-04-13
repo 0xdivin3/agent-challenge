@@ -39,7 +39,27 @@ const server = createServer((req, res) => {
 
   if (req.url === "/api/config") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ready: true }));
+    res.end(JSON.stringify({ groqKey: process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || "" }));
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/analyze") {
+    let body = "";
+    req.on("data", d => body += d);
+    req.on("end", async () => {
+      try {
+        const { address } = JSON.parse(body);
+        const [dex, rug] = await Promise.all([
+          fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`).then(r => r.json()).catch(() => null),
+          fetch(`https://api.rugcheck.xyz/v1/tokens/${address}/report`).then(r => r.json()).catch(() => null),
+        ]);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ dex, rug }));
+      } catch (e) {
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
     return;
   }
 
@@ -60,7 +80,7 @@ server.listen(WEB_PORT, () => {
 // ── ElizaOS ───────────────────────────────────────────────────────────────────
 console.log("🚀 Starting ElinosaAI...");
 
-const elizaos = spawn("elizaos", [
+const elizaos = spawn("npx", ["--yes", "@elizaos/cli@1.0.0", 
   "start", "--character", "./characters/solbrief.character.json"
 ], { stdio: "inherit", cwd: __dirname, shell: true });
 
@@ -81,6 +101,6 @@ setTimeout(() => {
 }, 8000);
 
 elizaos.on("exit", (code) => {
-  server.close();
-  process.exit(code ?? 0);
+  console.log("⚠️ ElizaOS exited — Telegram bot still running");
+  // Don't exit — keep web server and Telegram bot alive
 });

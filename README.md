@@ -127,7 +127,7 @@ Agent: 🟢 Goal: Thinking of Buying
 | Rug Analysis | [RugCheck.xyz API](https://rugcheck.xyz) | Risk score, LP lock, holder analysis (free, no key needed) |
 | Wallet Data | [Helius](https://helius.xyz) | Transaction history (free tier — 100K req/mo) |
 | Telegram | Telegram Bot API | Long-polling bot interface |
-| Runtime | [Bun](https://bun.sh) | Fast JavaScript/TypeScript runtime |
+| Runtime | [Node.js](https://nodejs.org) | Production container runtime |
 | Container | Docker | Containerised deployment |
 
 ---
@@ -155,7 +155,7 @@ agent-challenge/
 ├── nos_job_def/
 │   └── nosana_eliza_job_definition.json  # Nosana deployment config
 │
-├── Dockerfile                            # Production container (Bun-based)
+├── Dockerfile                            # Production container (Node.js-based)
 ├── .env.example                          # Environment variable template
 ├── package.json                          # Dependencies and scripts
 └── README.md
@@ -167,7 +167,7 @@ agent-challenge/
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) v1.0+ — `curl -fsSL https://bun.sh/install | bash`
+- [Node.js](https://nodejs.org) v20+ and npm
 - Git
 - A free [Helius](https://helius.xyz) API key (for wallet lookups)
 - Optional: Telegram bot token from [@BotFather](https://t.me/BotFather)
@@ -184,7 +184,7 @@ cd agent-challenge
 ### 2. Install dependencies
 
 ```bash
-bun install --ignore-scripts
+npm install
 ```
 
 ### 3. Configure environment
@@ -209,7 +209,7 @@ TELEGRAM_BOT_TOKEN=your_token_here  # Optional — from @BotFather on Telegram
 ### 4. Run the agent
 
 ```bash
-bun run dev
+npm start
 ```
 
 Open **http://localhost:3000** in your browser and paste any Solana token address.
@@ -219,10 +219,55 @@ Open **http://localhost:3000** in your browser and paste any Solana token addres
 In a separate terminal:
 
 ```bash
-bun run telegram
+npm run telegram
 ```
 
 Then open your bot in Telegram and send `/start`.
+
+---
+
+## Testing the Project
+
+### Test 1 — Token Analysis (Web UI)
+
+1. Run `npm start` and open `http://localhost:3000`
+2. Paste this real Solana token address into the chat:
+   ```
+   EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+   ```
+   (This is USDC — a safe, well-known token good for testing)
+3. You should receive a full report: price, liquidity, volume, risk score, holder data
+4. Reply `D` and confirm you get the "Just Curious" goal analysis
+
+### Test 2 — Rug Check on a risky token
+
+1. Paste this address into the chat:
+   ```
+   7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgHkv
+   ```
+2. Confirm the risk score is flagged as HIGH RISK or DANGER
+3. Reply `C` and verify you get the full rug safety breakdown
+
+### Test 3 — Wallet Activity
+
+1. Send this message in the chat:
+   ```
+   check wallet 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM
+   ```
+2. Confirm you get a transaction type summary (requires HELIUS_API_KEY in .env)
+
+### Test 4 — Telegram Bot
+
+1. Run `npm run telegram` in a second terminal
+2. Open your bot in Telegram and send `/start`
+3. Paste the USDC address above
+4. Confirm the full report arrives in Telegram
+5. Reply `A` and confirm the buying analysis arrives
+
+### Test 5 — Invalid address handling
+
+1. Send `hello` or `not-an-address` in the chat
+2. Confirm the agent does NOT trigger token analysis (no false positives)
 
 ---
 
@@ -237,8 +282,8 @@ Then open your bot in Telegram and send `/start`.
 
 ### Telegram
 
-1. Start the agent with `bun run dev`
-2. In a second terminal, run `bun run telegram`
+1. Start the agent with `npm start`
+2. In a second terminal, run `npm run telegram`
 3. Open your bot in Telegram
 4. Send `/start` for instructions
 5. Paste any Solana contract address
@@ -358,7 +403,7 @@ The core intelligence lives in `src/index.ts` — a custom ElizaOS plugin with t
 | Criteria | Weight | Implementation |
 |----------|--------|---------------|
 | Technical Implementation | 25% | TypeScript plugin with 3 typed actions, proper ElizaOS interfaces, parallel API fetching, full error handling, address validation |
-| Nosana Integration | 25% | Bun-based Dockerfile, Nosana job definition, Qwen/Qwen3.5-4B via Nosana OpenAI-compatible endpoint |
+| Nosana Integration | 25% | Node.js-based Dockerfile, Nosana job definition, Qwen/Qwen3.5-4B via Nosana OpenAI-compatible endpoint |
 | Usefulness & UX | 25% | Web UI + Telegram bot, goal-based A/B/C/D flow, real on-chain data, practical memecoin use case |
 | Creativity & Originality | 15% | Conversational rug-check agent with interactive goal selection — not a generic chatbot |
 | Documentation | 10% | This README, `.env.example`, inline code comments, setup and deployment guides |

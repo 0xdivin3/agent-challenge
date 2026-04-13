@@ -1,11 +1,8 @@
 /**
- * Token Analysis Helper
- * Returns { card, question } — two separate Telegram messages
+ * ElinosaAI Token Analyzer
+ * Returns { card, question, data } where data is a structured object — not raw text.
+ * This avoids fragile regex-scraping in conversation-handler.
  */
-
-function isSolanaAddress(text) {
-  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(text.trim());
-}
 
 function extractAddress(text) {
   const match = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
@@ -31,7 +28,7 @@ function formatChange(n) {
 
 function getVerdict(score, rugged) {
   if (rugged)      return "🚨 RUGGED";
-  if (score >= 800) return "✅ SAFE";
+  if (score >= 800) return "✅ GOOD";
   if (score >= 500) return "⚠️ CAUTION";
   if (score >= 200) return "🔴 HIGH RISK";
   return "💀 DANGER";
@@ -42,21 +39,22 @@ async function fetchDexScreener(address) {
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
     if (!res.ok) return null;
     const data = await res.json();
-    const pairs = (data.pairs ?? []).filter(p => p.chainId === "solana");
-    if (pairs.length === 0) return null;
-    return pairs.sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0];
+    const pairs = (data.pairs || []).filter(p => p.chainId === "solana");
+    if (!pairs.length) return null;
+    return pairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0];
   } catch { return null; }
 }
 
 async function fetchRugCheck(address) {
   try {
-    const res = await fetch(`https://api.rugcheck.xyz/v1/tokens/${address}/report`);
+    const res = await fetch(`https://api.rugcheck.xyz/v1/tokens/${address}/report/summary`);
     if (!res.ok) return null;
     return await res.json();
   } catch { return null; }
 }
 
-// Returns { card, question, raw } or null
+// Returns { card, question, data } or null
+// data = structured object with all token metrics (no regex scraping needed)
 async function analyzeToken(text) {
   const address = extractAddress(text);
   if (!address) return null;
@@ -66,39 +64,66 @@ async function analyzeToken(text) {
     fetchRugCheck(address),
   ]);
 
-  // ── Build the data card (Message 1) ───────────────────────────────────────
+  // ── Structured data object (source of truth for follow-ups) ──────────────
+  const data = {
+    address,
+    symbol:        dex?.baseToken?.symbol  || "Unknown",
+    name:          dex?.baseToken?.name    || "Unknown",
+    price:         parseFloat(dex?.priceUsd || 0),
+    change24h:     parseFloat(dex?.priceChange?.h24 || 0),
+    change6h:      parseFloat(dex?.priceChange?.h6  || 0),
+    change1h:      parseFloat(dex?.priceChange?.h1  || 0),
+    liquidity:     parseFloat(dex?.liquidity?.usd   || 0),
+    volume24h:     parseFloat(dex?.volume?.h24      || 0),
+    marketCap:     parseFloat(dex?.marketCap        || 0),
+    buys:          dex?.txns?.h24?.buys  || 0,
+    sells:         dex?.txns?.h24?.sells || 0,
+    pairAgeHours:  dex ? Math.floor((Date.now() - (dex.pairCreatedAt || 0)) / 3600000) : 0,
+    dexUrl:        dex?.url || null,
+    socials:       dex?.info?.socials || [],
+    // RugCheck fields
+    riskScore:     rug?.score_normalised ?? rug?.score ?? null,
+    rugged:        rug?.rugged ?? false,
+    top10Pct:      rug?.topHolders
+                     ? parseFloat((rug.topHolders.slice(0,10).reduce((s,h) => s+(h.pct||0), 0) * 100).toFixed(1))
+                     : null,
+    lpLockedPct:   parseFloat(rug?.markets?.[0]?.lp?.lpLockedPct ?? 0),
+    lpBurnedPct:   parseFloat(rug?.markets?.[0]?.lp?.lpBurnedPct ?? 0),
+    totalHolders:  rug?.totalHolders ?? null,
+    topHolders:    rug?.topHolders   ?? [],
+    hasInsiders:   rug?.topHolders?.some(h => h.insider) ?? false,
+    redFlags:      (rug?.risks || []).filter(r => r.level === "danger" || r.level === "warning"),
+    rugCheckOk:    rug !== null,
+  };
+
+  // Derived
+  data.buySellRatio = data.sells > 0 ? (data.buys / data.sells).toFixed(2) : "N/A";
+  data.pairAgeDays  = Math.floor(data.pairAgeHours / 24);
+  data.ageStr       = data.pairAgeDays > 0
+    ? `${data.pairAgeDays}d ${data.pairAgeHours % 24}h`
+    : `${data.pairAgeHours}h`;
+  data.verdict     = data.riskScore !== null ? getVerdict(data.riskScore, data.rugged) : "Unknown";
+  data.verdictText = data.verdict.replace(/[^\x00-\x7F]/g, "").trim() || data.verdict;
+
+  // ── Build the display card ────────────────────────────────────────────────
   const lines = [];
+  const changeEmoji = data.change24h >= 0 ? "📈" : "📉";
 
   if (dex) {
-    const sym    = dex.baseToken?.symbol || "??";
-    const name   = dex.baseToken?.name   || "Unknown";
-    const price  = parseFloat(dex.priceUsd || 0);
-    const liq    = parseFloat(dex.liquidity?.usd || 0);
-    const vol    = parseFloat(dex.volume?.h24 || 0);
-    const mc     = parseFloat(dex.marketCap || dex.fdv || 0);
-    const c24    = parseFloat(dex.priceChange?.h24 || 0);
-    const c6     = parseFloat(dex.priceChange?.h6  || 0);
-    const c1     = parseFloat(dex.priceChange?.h1  || 0);
-    const buys   = dex.txns?.h24?.buys  || 0;
-    const sells  = dex.txns?.h24?.sells || 0;
-    const ratio  = sells > 0 ? (buys / sells).toFixed(2) : "N/A";
-    const ageMs  = Date.now() - (dex.pairCreatedAt ?? 0);
-    const ageH   = Math.floor(ageMs / 3600000);
-    const ageD   = Math.floor(ageH / 24);
-    const ageStr = ageD > 0 ? `${ageD}d ${ageH % 24}h` : `${ageH}h`;
-    const changeEmoji = c24 >= 0 ? "📈" : "📉";
-
-    lines.push(`🪙 *${sym}* — ${name}`);
+    lines.push(`🪙 *${data.symbol}* — ${data.name}`);
     lines.push(`📍 \`${address.slice(0,6)}...${address.slice(-6)}\``);
     lines.push(``);
-    lines.push(`💵 Price: *$${price < 0.0001 ? price.toExponential(4) : price.toFixed(6)}*`);
-    lines.push(`${changeEmoji} 24h: *${formatChange(c24)}*  6h: ${formatChange(c6)}  1h: ${formatChange(c1)}`);
+    lines.push(`💵 Price: *$${data.price < 0.0001 ? data.price.toExponential(4) : data.price.toFixed(6)}*`);
+    lines.push(`${changeEmoji} 24h: *${formatChange(data.change24h)}*  6h: ${formatChange(data.change6h)}  1h: ${formatChange(data.change1h)}`);
     lines.push(``);
-    lines.push(`💧 Liquidity:  *${formatUsd(liq)}*`);
-    lines.push(`📊 24h Volume: *${formatUsd(vol)}*`);
-    lines.push(`💎 Market Cap: *${formatUsd(mc)}*`);
-    lines.push(`🔄 Buys/Sells: *${buys} / ${sells}* (ratio ${ratio})`);
-    lines.push(`🕐 Pair Age:   *${ageStr}*`);
+    lines.push(`💧 Liquidity:  *${formatUsd(data.liquidity)}*`);
+    lines.push(`📊 24h Volume: *${formatUsd(data.volume24h)}*`);
+    lines.push(`💎 Market Cap: *${formatUsd(data.marketCap)}*`);
+    lines.push(`🔄 Buys/Sells: *${data.buys} / ${data.sells}* (ratio ${data.buySellRatio})`);
+    lines.push(`🕐 Pair Age:   *${data.ageStr}*`);
+    if (data.socials?.length) {
+      lines.push(`🌐 ${data.socials.map(s => `${s.type}: ${s.url}`).join("  |  ")}`);
+    }
   } else {
     lines.push(`⚠️ *No DexScreener data found*`);
     lines.push(`Token may be very new, unlisted, or the address is incorrect.`);
@@ -108,31 +133,16 @@ async function analyzeToken(text) {
   lines.push(`─────────────────────`);
 
   if (rug) {
-    const score    = rug.score_normalised ?? rug.score ?? 0;
-    const verdict  = getVerdict(score, rug.rugged);
-    const top10    = (rug.topHolders || []).slice(0, 10);
-    const top10pct = top10.length > 0
-      ? top10.reduce((s, h) => s + (h.pct || 0), 0).toFixed(1) + "%"
-      : "N/A";
-    const lpLocked  = (rug.markets?.[0]?.lp?.lpLockedPct  ?? 0).toFixed(1);
-    const lpBurned  = (rug.markets?.[0]?.lp?.lpBurnedPct  ?? 0).toFixed(1);
-    const holders   = rug.totalHolders ?? "N/A";
-    const insiders  = top10.some(h => h.insider);
+    lines.push(`🛡 Risk Score: *${data.riskScore}/1000 — ${data.verdict}*`);
+    lines.push(`👥 Top 10 Holders: *${data.top10Pct !== null ? data.top10Pct + "%" : "N/A"}* of supply`);
+    lines.push(`🔒 LP Locked: *${data.lpLockedPct.toFixed(1)}%*  |  LP Burned: *${data.lpBurnedPct.toFixed(1)}%*`);
+    lines.push(`👤 Total Holders: *${data.totalHolders ?? "N/A"}*`);
+    if (data.hasInsiders) lines.push(`⚠️ Insider wallets detected in top holders`);
 
-    lines.push(`🛡 Risk Score: *${score}/1000 — ${verdict}*`);
-    lines.push(`👥 Top 10 Holders: *${top10pct}* of supply`);
-    lines.push(`🔒 LP Locked: *${lpLocked}%*  |  LP Burned: *${lpBurned}%*`);
-    lines.push(`👤 Total Holders: *${holders}*`);
-    if (insiders) lines.push(`⚠️ Insider wallets in top holders`);
-
-    const flags = (rug.risks || [])
-      .filter(r => r.level === "danger" || r.level === "warning")
-      .slice(0, 4);
-
-    if (flags.length > 0) {
+    if (data.redFlags.length > 0) {
       lines.push(``);
       lines.push(`🚩 *Red Flags:*`);
-      flags.forEach(r => {
+      data.redFlags.slice(0, 4).forEach(r => {
         lines.push(`${r.level === "danger" ? "🔴" : "🟡"} ${r.name}: ${r.description}`);
       });
     }
@@ -140,7 +150,6 @@ async function analyzeToken(text) {
     lines.push(`🛡 RugCheck: Unable to fetch safety data`);
   }
 
-  // ── Goal question (Message 2) ─────────────────────────────────────────────
   const question = [
     `*What's your goal with this token?*`,
     ``,
@@ -149,13 +158,10 @@ async function analyzeToken(text) {
     `C) 🔴 Smells like a rug`,
     `D) 🔵 Just curious`,
     ``,
-    `_Reply A, B, C, or D — I'll tailor my analysis. DYOR._`,
+    `_Or ask me anything: "who are the whales?", "is this safe to hold overnight?", "check sentiment" — I'll reason with the data I just pulled._`,
   ].join("\n");
 
-  // raw text for LLM context (no markdown)
-  const raw = lines.join("\n");
-
-  return { card: lines.join("\n"), question, raw };
+  return { card: lines.join("\n"), question, data };
 }
 
-module.exports = { analyzeToken, containsSolanaAddress, isSolanaAddress, extractAddress };
+module.exports = { analyzeToken, containsSolanaAddress };

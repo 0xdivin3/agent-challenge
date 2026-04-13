@@ -444,10 +444,13 @@ async function runAnalysis() {
   document.getElementById('results').innerHTML =
     '<div class="empty"><div class="dots"><span></span><span></span><span></span></div><div style="margin-top:10px;color:var(--text2)">Fetching live data from DexScreener &amp; RugCheck...</div></div>';
 
-  const [dex, rug] = await Promise.all([
-    fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`).then(r => r.json()).catch(() => null),
-    fetch(`https://api.rugcheck.xyz/v1/tokens/${addr}/report`).then(r => r.json()).catch(() => null),
-  ]);
+  const proxyRes = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address: addr })
+  }).then(r => r.json()).catch(() => null);
+  const dex = proxyRes?.dex || null;
+  const rug = proxyRes?.rug || null;
 
   btn.textContent = 'Analyze'; btn.disabled = false;
 

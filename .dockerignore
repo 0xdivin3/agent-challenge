@@ -6,17 +6,19 @@
 node_modules
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 
-# Environment files
+# Secrets — NEVER bake into image, pass at runtime with --env-file
+.env
 .env.local
 .env.example
 .env.*.local
 .env.*
 
+# ElizaOS local DB
+.eliza/
+
 # Build output
-.mastra/
 dist/
 build/
 
@@ -24,28 +26,13 @@ build/
 .vscode/
 .idea/
 *.swp
-*.swo
-*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Documentation
-*.md
-LICENSE
-
-# Docker
-Dockerfile
-.dockerignore
-
-# Temporary files
+# Temp
 *.tmp
 *.temp
 .cache/
-
-# Test files
 coverage/
-.nyc_output/
-*.test.js
-*.spec.js
